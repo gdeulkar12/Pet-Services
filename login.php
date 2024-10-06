@@ -1,6 +1,6 @@
 <?php
-
-     $host = "localhost";  
+    // Database connection
+    $host = "localhost";  
     $user = "root";  
     $password = '';  
     $db_name = "practice";  
@@ -10,27 +10,25 @@
         die("Failed to connect with MySQL: ". mysqli_connect_error());  
     }  
 
-    //Authentication process
+    // Authentication process
     $username = $_POST['uname'];  
     $password = $_POST['pword'];  
-    $username = stripcslashes($username);  
-    $password = stripcslashes($password);  
-    $username = mysqli_real_escape_string($con, $username);  
-    $password = mysqli_real_escape_string($con, $password);
-   
-    $sql = "select *from users where username = '$username' and password = '$password'"; 
-    $result = mysqli_query($con, $sql);  
-    $row = mysqli_fetch_array($result, MYSQLI_ASSOC);  
-    $count = mysqli_num_rows($result);  
-      
-    if($count == 1){  
-        echo "<h1><center> Login successful </center></h1>";  
-    }  
-    else{  
-        echo "<h1> Login failed. Invalid username or password.</h1>";  
-    }     
 
+    // Prepared statement to prevent SQL Injection
+    $stmt = $con->prepare("SELECT * FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();  
+
+    // Verifying the hashed password
+    if($row && password_verify($password, $row['password'])) {  
+        echo "<h1><center>Login successful</center></h1>";  
+    } else {  
+        echo "<h1>Login failed. Invalid username or password.</h1>";  
+    }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -47,6 +45,14 @@
     <!-- custom css file link  -->
     <link rel="stylesheet" href="css/style.css">
 
+    <style>
+        /* Additional styling for buttons */
+        .btn:hover {
+            background-color: #ff6b6b;
+            color: #fff;
+            transition: background-color 0.3s ease;
+        }
+    </style>
 </head>
 
 <body>
@@ -72,6 +78,7 @@
             <div class="fas fa-user" id="login-btn"></div>
         </div>
 
+        <!-- Login Form -->
         <form action="login.php" class="login-form" method="post">
             <h3>sign in</h3>
             <input type="email" name="uname" placeholder="enter your email" class="box">
@@ -86,7 +93,6 @@
             <a href="#">forget password</a>
             <a href="#">sign up</a>
         </div>
-        </form>
 
     </header>
 
@@ -128,7 +134,7 @@
 
     <!-- about section ends -->
 
-    
+    <!-- footer section starts -->
     <section class="footer">
 
         <img src="image/top_wave.png" alt="">
@@ -144,12 +150,15 @@
         <div class="credit"><span>Pet Services Pvt. Ltd.</span> | All Rights Reserved! </div>
 
     </section>
+    <!-- footer section ends -->
+
     <!-- custom js file link  -->
     <script src="js/script.js"></script>
 
 </body>
 
 </html>
+
 
 <!--
 
